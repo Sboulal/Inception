@@ -1,0 +1,60 @@
+version: "3.9"
+
+services:
+  mariadb:
+    container_name: "mariadb"
+    image: "mariadb:1337"
+    build: ./requirements/mariadb/
+    restart: on-failure
+    env_file:
+      - .env
+    volumes:
+      - DB:/var/lib/mysql
+    networks:
+      - my-network
+  
+  wordpress:
+    container_name: "wordpress"
+    image: "wordpress:1337"
+    build: ./requirements/wordpress/
+    restart: on-failure
+    depends_on: 
+      - mariadb
+    networks:
+      - my-network
+    volumes:
+      - wordpress:/var/www/html
+    env_file:
+      - .env
+
+  nginx:
+    container_name: "nginx"
+    image: "nginx:1337"
+    build: ./requirements/nginx/
+    restart: on-failure
+    depends_on: 
+      - wordpress
+    ports:
+      - "443:443"
+    networks: 
+      - my-network
+    volumes:
+      - wordpress:/var/www/html 
+
+volumes:
+  DB:
+    driver: local
+    driver_opts:
+      type: 'none'
+      o: bind
+      device: /home/saboulal/data/DB
+  wordpress:
+    driver: local
+    driver_opts:
+      type: 'none'
+      o: bind
+      device: /home/saboulal/data/wordpress
+
+
+networks:
+  my-network:
